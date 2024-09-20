@@ -1,6 +1,6 @@
 {
   "name": "signalk-n2k-displays",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Signal K Plugin ",
   "main": "index.js",
   "scripts": {
