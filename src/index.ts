@@ -34,6 +34,11 @@ export default function (app: any) {
         subscribeToSimnet(properties)
         subscribeToRaymarine(properties)
       }
+
+      app.on('nmea2000OutAvailable', () => {
+        app.debug('requesting Raymarine display info...')
+        app.emit('nmea2000out', '2024-06-28T14:51:57.933Z,2,126720,0,255,12,3b,9f,8c,10,03,01,3C,00,B0,04,FF,FF')
+      })
     },
 
     stop: function () {
@@ -64,6 +69,18 @@ export default function (app: any) {
             enumNames: Object.values(raymarineColorMap),
             default: 'day1'
           },
+          navicoGroups: {
+            title: 'Enabled Navico Groups',
+            type: 'object',
+            properties: {
+            }
+          },
+          raymarineGroups: {
+            title: 'Enabled Raymarine Groups',
+            type: 'object',
+            properties: {
+            }
+          },
           groupMappings: {
             title: 'Display Group Mappings',
             description: 'If you setup a mapping, the display settings will be kept in sync between your Raymarine and Navico devices in those groups',
@@ -89,6 +106,22 @@ export default function (app: any) {
           }
         }
       }
+      Object.keys(simradDisplayGroups).forEach(key => {
+        let name = simradDisplayGroups[key]
+        schema.properties.navicoGroups.properties[key] = {
+          type: 'boolean',
+          title: `${name}`,
+          default: true
+        }
+      })
+      Object.keys(raymarineDisplayGroups).forEach(key => {
+        let name = raymarineDisplayGroups[key]
+        schema.properties.raymarineGroups.properties[key] = {
+          type: 'boolean',
+          title: `${name}`,
+          default: true
+        }
+      })
       return schema
     }
   }
@@ -229,6 +262,13 @@ export default function (app: any) {
 
   function setupRaymarineNightMode() {
     Object.keys(raymarineDisplayGroups).forEach(group => {
+      if ( props.raymarineGroups !== undefined &&
+           props.raymarineGroups[group] !== undefined &&
+           props.raymarineGroups[group] === false )
+      {
+        return
+      }
+      
       let path = `electrical.displays.raymarine.${group}.nightMode.state`
       app.registerPutHandler(
         'vessels.self',
@@ -291,6 +331,12 @@ export default function (app: any) {
 
   function setupSimradNightColor() {
     Object.keys(simradDisplayGroups).forEach(group => {
+      if ( props.navicoGroups !== undefined &&
+           props.navicoGroups[group] !== undefined &&
+           props.navicoGroups[group] === false )
+      {
+        return
+      }
       let path = `electrical.displays.navico.${group}.nightModeColor`
       app.registerPutHandler(
         'vessels.self',
@@ -410,6 +456,13 @@ export default function (app: any) {
 
   function setupSimradNightMode() {
     Object.keys(simradDisplayGroups).forEach(group => {
+      if ( props.navicoGroups !== undefined &&
+           props.navicoGroups[group] !== undefined &&
+           props.navicoGroups[group] === false )
+      {
+        return
+      }
+      
       let path = `electrical.displays.navico.${group}.nightMode.state`
       app.registerPutHandler(
         'vessels.self',
