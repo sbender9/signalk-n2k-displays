@@ -13,11 +13,26 @@
  * limitations under the License.
  */
 
+import {
+  PGN,
+  PGN_126720_Seatalk1DisplayBrightness,
+  PGN_126720_Seatalk1DisplayColor,
+  PGN_130845_SimnetKeyValue,
+  SeatalkNetworkGroup,
+  SeatalkDisplayColor,
+  SimnetDisplayGroup,
+  SimnetNightModeColor,
+  mapCamelCaseKeys
+} from '@canboat/ts-pgns'
+import { satisfies } from 'semver'
+
 export default function (app: any) {
   const error = app.error
   const debug = app.debug
   let props: any
   let onStop:any = []
+
+  const needsCamelMapping = !satisfies(app.config.version, '>=2.15.0')
   
   const plugin: Plugin = {
     start: function (properties: any) {
@@ -312,14 +327,14 @@ export default function (app: any) {
               {
                 path,
                 value: {
-                  displayName: `${raymarineDisplayGroups[group]} Night Mode`,
+                  displayName: `Raymarine ${raymarineDisplayGroups[group]} Night Mode`,
                   units: 'bool'
                 }
               },
               {
                 path: `electrical.displays.raymarine.${group}.nightMode`,
                 value: {
-                  displayName: `${raymarineDisplayGroups[group]} Night Mode`
+                  displayName: `Raymarin ${raymarineDisplayGroups[group]} Night Mode`
                 }
               }
             ]
@@ -506,14 +521,14 @@ export default function (app: any) {
               {
                 path,
                 value: {
-                  displayName: `${simradDisplayGroups[group]} Night Mode`,
+                  displayName: `Navico ${simradDisplayGroups[group]} Night Mode`,
                   units: 'bool'
                 }
               },
               {
                 path: `electrical.displays.navico.${group}.nightMode`,
                 value: {
-                  displayName: `${simradDisplayGroups[group]} Night Mode`
+                  displayName: `Navico ${simradDisplayGroups[group]} Night Mode`
                 }
               }
             ]
@@ -522,23 +537,20 @@ export default function (app: any) {
       })
     })
   }
+
+  function convert(pgn: PGN) {
+    return needsCamelMapping ? mapCamelCaseKeys(pgn) : pgn
+  }
   
   function setRaymarineDisplayBrightness(group:string, value:number) {
-    app.emit('nmea2000JsonOut', {
-      "prio":7,
-      "pgn":126720,
-      "dst":255,
-      "fields": {
-        "Manufacturer Code":"Raymarine",
-        "Industry Code":"Marine Industry",
-        "Proprietary ID":"0x0c8c",
-        "Group":raymarineDisplayGroups[group],
-        "Unknown 1":1,
-        "Command":"Brightness",
-        "Brightness": value * 100,
-        "Unknown 2": 0,
-      }
-    })
+    app.emit('nmea2000JsonOut',
+             convert(new PGN_126720_Seatalk1DisplayBrightness({
+               group: raymarineDisplayGroups[group],
+               unknown1: 1,
+               brightness: value * 100,
+               unknown2: 0,
+             })))
+    
     app.handleMessage(plugin.id, {
       updates: [
         {
@@ -555,21 +567,12 @@ export default function (app: any) {
 
   function setRaymarineDisplayColor(group:string, value:string)
   {
-    let pgn =  {
-      "prio":7,
-      "pgn":126720,
-      "dst":255,
-      "fields":{
-        "Manufacturer Code":"Raymarine",
-        "Industry Code":"Marine Industry",
-        "Proprietary ID":"0x0c8c",
-        "Group":raymarineDisplayGroups[group],
-        "Unknown 1":1,
-        "Command":"Color",
-        "Color":raymarineColorMap[value],
-        "Unknown 2": 0,
-      }
-    }
+    let pgn =  convert(new PGN_126720_Seatalk1DisplayColor({
+      group: raymarineDisplayGroups[group],
+      unknown1: 1,
+      color:raymarineColorMap[value],
+      unknown2: 0,
+    }))
     app.emit('nmea2000JsonOut',pgn)
   }
 
@@ -594,19 +597,14 @@ export default function (app: any) {
 
   function setSimradDisplayBrightness(group:string, value:number)
   {
-    app.emit('nmea2000JsonOut', {
-      "prio":3,
-      "pgn":130845,
-      "dst":255,
-      "fields":{
-        "Manufacturer Code":"Simrad",
-        "Industry Code":"Marine Industry",
-        "Display Group":simradDisplayGroups[group],
-        "Key":"Backlight level",
-        "Spare":0,
-        "MinLength":1,
-        "Value":value*100}
-    })
+    app.emit('nmea2000JsonOut', convert(new PGN_130845_SimnetKeyValue({
+      displayGroup: simradDisplayGroups[group],
+      key: "Backlight level",
+      spare9: 0,
+      minlength:1,
+      value:value*100
+    })))
+    
     app.handleMessage(plugin.id, {
       updates: [
         {
@@ -623,19 +621,14 @@ export default function (app: any) {
 
   function setSimradDisplayNightMode(group:string, value:number)
   {
-    app.emit('nmea2000JsonOut', {
-      "prio":3,
-      "pgn":130845,
-      "dst":255,
-      "fields":{
-        "Manufacturer Code":"Simrad",
-        "Industry Code":"Marine Industry",
-        "Display Group":simradDisplayGroups[group],
-        "Key":"Night mode",
-        "Spare":0,
-        "MinLength":1,
-        "Value":value == 1 ? 4 : 2}
-    })
+    app.emit('nmea2000JsonOut', convert(new PGN_130845_SimnetKeyValue({
+      displayGroup: simradDisplayGroups[group],
+      key: "Night mode",
+      spare9: 0,
+      minlength:1,
+      value:value == 1 ? 4 : 2
+    })))
+    
     app.handleMessage(plugin.id, {
       updates: [
         {
@@ -652,19 +645,13 @@ export default function (app: any) {
 
   function setSimradDisplayNightColor(group:string, value:string)
   {
-    app.emit('nmea2000JsonOut', {
-      "prio":3,
-      "pgn":130845,
-      "dst":255,
-      "fields":{
-        "Manufacturer Code":"Simrad",
-        "Industry Code":"Marine Industry",
-        "Display Group":"Default",
-        "Key":"Night mode color",
-        "Spare":0,
-        "MinLength":1,
-        "Value":simradDisplayNightColors[value]}
-    })
+    app.emit('nmea2000JsonOut', convert(new PGN_130845_SimnetKeyValue({
+      displayGroup: simradDisplayGroups[group],
+      key: "Night mode color",
+      spare9: 0,
+      minlength:1,
+      value: simradDisplayNightColors[value]
+    })))
   }
 
   function subscribeToSimnet(properties:any) {
@@ -788,42 +775,42 @@ export default function (app: any) {
   return plugin
 }
 
-const raymarineDisplayGroups: any = {
-  'none': "None",
-  'helm1': "Helm 1",
-  'helm2': "Helm 2",
-  'cockpit': "Cockpit",
-  'flybridge': "Flybridge",
-  'mast': "Mast",
-  'group1': "Group 1",
-  'group2': "Group 2",
-  'group3': "Group 3",
-  'group4': "Group 4",
-  'group5': "Group 5"
+const raymarineDisplayGroups: {[key:string]: SeatalkNetworkGroup} = {
+  'none': SeatalkNetworkGroup.None,
+  'helm1': SeatalkNetworkGroup.Helm1,
+  'helm2': SeatalkNetworkGroup.Helm2,
+  'cockpit': SeatalkNetworkGroup.Cockpit,
+  'flybridge': SeatalkNetworkGroup.Flybridge,
+  'mast': SeatalkNetworkGroup.Mast,
+  'group1': SeatalkNetworkGroup.Group1,
+  'group2': SeatalkNetworkGroup.Group2,
+  'group3': SeatalkNetworkGroup.Group3,
+  'group4': SeatalkNetworkGroup.Group4,
+  'group5': SeatalkNetworkGroup.Group5
 }
 
-const raymarineColorMap: any = {
-  "day1": "Day 1",
-  "day2": "Day 2",
-  "red/black": "Red/Black",
-  "inverse": "Inverse",
+const raymarineColorMap: {[key:string]: SeatalkDisplayColor} = {
+  "day1": SeatalkDisplayColor.Day1,
+  "day2": SeatalkDisplayColor.Day2,
+  "red/black": SeatalkDisplayColor.Redblack,
+  "inverse": SeatalkDisplayColor.Inverse,
 }
 
-const simradDisplayGroups: any = {
-  'default': "Default",
-  'group1': "Group 1",
-  'group2': "Group 2",
-  'group3': "Group 3",
-  'group4': "Group 4",
-  'group5': "Group 5",
-  'group6': "Group 6",
+const simradDisplayGroups: {[key: string]: SimnetDisplayGroup} = {
+  'default': SimnetDisplayGroup.Default,
+  'group1': SimnetDisplayGroup.Group1,
+  'group2': SimnetDisplayGroup.Group2,
+  'group3': SimnetDisplayGroup.Group3,
+  'group4': SimnetDisplayGroup.Group4,
+  'group5': SimnetDisplayGroup.Group5,
+  'group6': SimnetDisplayGroup.Group6,
 }
 
-const simradDisplayNightColors: any = {
-  'red': 0,
-  'green': 1,
-  'blue': 2,
-  'white': 3,
+const simradDisplayNightColors: {[key: string]: SimnetNightModeColor|number} = {
+  'red': SimnetNightModeColor.Red,
+  'green': SimnetNightModeColor.Green,
+  'blue': SimnetNightModeColor.Blue,
+  'white': SimnetNightModeColor.White,
   'magenta': 4
 }
 
