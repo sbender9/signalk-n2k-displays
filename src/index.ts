@@ -22,18 +22,15 @@ import {
   SeatalkDisplayColor,
   SimnetDisplayGroup,
   SimnetNightModeColor,
-  mapCamelCaseKeys
+  convertCamelCase
 } from '@canboat/ts-pgns'
-import { satisfies } from 'semver'
 
 export default function (app: any) {
   const error = app.error
   const debug = app.debug
   let props: any
-  let onStop:any = []
+  let onStop: any = []
 
-  const needsCamelMapping = !satisfies(app.config.version, '>=2.15.0')
-  
   const plugin: Plugin = {
     start: function (properties: any) {
       props = properties
@@ -45,30 +42,34 @@ export default function (app: any) {
       setupSimradNightColor()
       setupSimradNightMode()
 
-      if ( properties.groupMappings && properties.groupMappings.length > 0 ) {
+      if (properties.groupMappings && properties.groupMappings.length > 0) {
         subscribeToSimnet(properties)
         subscribeToRaymarine(properties)
       }
 
       app.on('nmea2000OutAvailable', () => {
         app.debug('requesting Raymarine display info...')
-        app.emit('nmea2000out', '2024-06-28T14:51:57.933Z,2,126720,0,255,12,3b,9f,8c,10,03,01,3C,00,B0,04,FF,FF')
+        app.emit(
+          'nmea2000out',
+          '2024-06-28T14:51:57.933Z,2,126720,0,255,12,3b,9f,8c,10,03,01,3C,00,B0,04,FF,FF'
+        )
       })
     },
 
     stop: function () {
-      onStop.forEach((f:any) => f())
+      onStop.forEach((f: any) => f())
       onStop = []
     },
 
     id: 'signalk-n2k-displays',
     name: 'NMEA 2000 Display Control',
-    description: 'Signal K Plugin that controls and syncs display devices from Raymarine and Navico devices',
+    description:
+      'Signal K Plugin that controls and syncs display devices from Raymarine and Navico devices',
 
     schema: () => {
       const schema: any = {
         type: 'object',
-        required: ['raymarineDayColor', 'raymarineNightColor' ],
+        required: ['raymarineDayColor', 'raymarineNightColor'],
         properties: {
           raymarineNightColor: {
             type: 'string',
@@ -87,22 +88,21 @@ export default function (app: any) {
           navicoGroups: {
             title: 'Enabled Navico Groups',
             type: 'object',
-            properties: {
-            }
+            properties: {}
           },
           raymarineGroups: {
             title: 'Enabled Raymarine Groups',
             type: 'object',
-            properties: {
-            }
+            properties: {}
           },
           groupMappings: {
             title: 'Display Group Mappings',
-            description: 'If you setup a mapping, the display settings will be kept in sync between your Raymarine and Navico devices in those groups',
+            description:
+              'If you setup a mapping, the display settings will be kept in sync between your Raymarine and Navico devices in those groups',
             type: 'array',
             items: {
               type: 'object',
-              required: ['raymarineGroup', 'simradGroup' ],
+              required: ['raymarineGroup', 'simradGroup'],
               properties: {
                 raymarineGroup: {
                   type: 'string',
@@ -115,7 +115,7 @@ export default function (app: any) {
                   title: 'Navico Group',
                   enum: Object.keys(simradDisplayGroups),
                   enumNames: Object.values(simradDisplayGroups)
-                },
+                }
               }
             }
           }
@@ -141,22 +141,22 @@ export default function (app: any) {
     }
   }
 
-  function getDisplayGroupName(path: string) {
+  function getDisplayGroupName (path: string) {
     //electrical.displays.simrad.default.brightness
     let parts = path.split('.')
     return parts[3]
   }
 
-  function getKeyName(path:string) {
+  function getKeyName (path: string) {
     let parts = path.split('.')
-    if ( parts[parts.length-1] === 'state' ) {
-      return parts[parts.length-2] + '.' + parts[parts.length-1]
+    if (parts[parts.length - 1] === 'state') {
+      return parts[parts.length - 2] + '.' + parts[parts.length - 1]
     } else {
-      return parts[parts.length-1]
+      return parts[parts.length - 1]
     }
   }
 
-  function setupRaymarineColor() {
+  function setupRaymarineColor () {
     Object.keys(raymarineDisplayGroups).forEach(group => {
       let path = `electrical.displays.raymarine.${group}.color`
       app.registerPutHandler(
@@ -189,7 +189,7 @@ export default function (app: any) {
               {
                 path,
                 value: 'day1'
-              },
+              }
             ],
             meta: [
               {
@@ -217,7 +217,7 @@ export default function (app: any) {
     })
   }
 
-  function setupRaymarineBrightness() {
+  function setupRaymarineBrightness () {
     Object.keys(raymarineDisplayGroups).forEach(group => {
       let path = `electrical.displays.raymarine.${group}.brightness`
       app.registerPutHandler(
@@ -237,11 +237,11 @@ export default function (app: any) {
               }
             ]
           })
-          
-          const mapping = props.groupMappings.find((mapping:any) => {
+
+          const mapping = props.groupMappings.find((mapping: any) => {
             return mapping.raymarineGroup === group
           })
-          if ( mapping ) {
+          if (mapping) {
             setSimradDisplayBrightness(mapping.simradGroup, value)
           }
           return {
@@ -257,7 +257,7 @@ export default function (app: any) {
               {
                 path,
                 value: 0
-              },
+              }
             ],
             meta: [
               {
@@ -265,7 +265,7 @@ export default function (app: any) {
                 value: {
                   displayName: `${raymarineDisplayGroups[group]} Brightness`,
                   units: 'ratio',
-                  range: [ 0, 1 ]
+                  range: [0, 1]
                 }
               }
             ]
@@ -275,15 +275,16 @@ export default function (app: any) {
     })
   }
 
-  function setupRaymarineNightMode() {
+  function setupRaymarineNightMode () {
     Object.keys(raymarineDisplayGroups).forEach(group => {
-      if ( props.raymarineGroups !== undefined &&
-           props.raymarineGroups[group] !== undefined &&
-           props.raymarineGroups[group] === false )
-      {
+      if (
+        props.raymarineGroups !== undefined &&
+        props.raymarineGroups[group] !== undefined &&
+        props.raymarineGroups[group] === false
+      ) {
         return
       }
-      
+
       let path = `electrical.displays.raymarine.${group}.nightMode.state`
       app.registerPutHandler(
         'vessels.self',
@@ -302,10 +303,10 @@ export default function (app: any) {
               }
             ]
           })
-          const mapping = props.groupMappings.find((mapping:any) => {
+          const mapping = props.groupMappings.find((mapping: any) => {
             return mapping.raymarineGroup === group
           })
-          if ( mapping ) {
+          if (mapping) {
             setSimradDisplayNightMode(mapping.simradGroup, value)
           }
           return {
@@ -321,7 +322,7 @@ export default function (app: any) {
               {
                 path,
                 value: 0
-              },
+              }
             ],
             meta: [
               {
@@ -344,12 +345,13 @@ export default function (app: any) {
     })
   }
 
-  function setupSimradNightColor() {
+  function setupSimradNightColor () {
     Object.keys(simradDisplayGroups).forEach(group => {
-      if ( props.navicoGroups !== undefined &&
-           props.navicoGroups[group] !== undefined &&
-           props.navicoGroups[group] === false )
-      {
+      if (
+        props.navicoGroups !== undefined &&
+        props.navicoGroups[group] !== undefined &&
+        props.navicoGroups[group] === false
+      ) {
         return
       }
       let path = `electrical.displays.navico.${group}.nightModeColor`
@@ -383,7 +385,7 @@ export default function (app: any) {
               {
                 path,
                 value: 'red'
-              },
+              }
             ],
             meta: [
               {
@@ -393,12 +395,15 @@ export default function (app: any) {
                   value: {
                     displayName: `${simradDisplayGroups[group]} Night Color`,
                     possibleValues: [
-                      ...Object.keys(simradDisplayNightColors).map((color: any) => {
-                        return {
-                          title: color.charAt(0).toUpperCase() + color.slice(1),
-                          value: color
+                      ...Object.keys(simradDisplayNightColors).map(
+                        (color: any) => {
+                          return {
+                            title:
+                              color.charAt(0).toUpperCase() + color.slice(1),
+                            value: color
+                          }
                         }
-                      })
+                      )
                     ],
                     enum: [...Object.keys(simradDisplayNightColors)]
                   }
@@ -411,8 +416,7 @@ export default function (app: any) {
     })
   }
 
-  
-  function setupSimradBrightness() {
+  function setupSimradBrightness () {
     Object.keys(simradDisplayGroups).forEach(group => {
       let path = `electrical.displays.navico.${group}.brightness`
       app.registerPutHandler(
@@ -432,10 +436,10 @@ export default function (app: any) {
               }
             ]
           })
-          const mapping = props.groupMappings.find((mapping:any) => {
+          const mapping = props.groupMappings.find((mapping: any) => {
             return mapping.simradGroup === group
           })
-          if ( mapping ) {
+          if (mapping) {
             setRaymarineDisplayBrightness(mapping.raymarineGroup, value)
           }
           return {
@@ -451,7 +455,7 @@ export default function (app: any) {
               {
                 path,
                 value: 0
-              },
+              }
             ],
             meta: [
               {
@@ -459,7 +463,7 @@ export default function (app: any) {
                 value: {
                   displayName: `${simradDisplayGroups[group]} Brightness`,
                   units: 'ratio',
-                  range: [ 0, 1 ]
+                  range: [0, 1]
                 }
               }
             ]
@@ -469,15 +473,16 @@ export default function (app: any) {
     })
   }
 
-  function setupSimradNightMode() {
+  function setupSimradNightMode () {
     Object.keys(simradDisplayGroups).forEach(group => {
-      if ( props.navicoGroups !== undefined &&
-           props.navicoGroups[group] !== undefined &&
-           props.navicoGroups[group] === false )
-      {
+      if (
+        props.navicoGroups !== undefined &&
+        props.navicoGroups[group] !== undefined &&
+        props.navicoGroups[group] === false
+      ) {
         return
       }
-      
+
       let path = `electrical.displays.navico.${group}.nightMode.state`
       app.registerPutHandler(
         'vessels.self',
@@ -496,10 +501,10 @@ export default function (app: any) {
               }
             ]
           })
-          const mapping = props.groupMappings.find((mapping:any) => {
+          const mapping = props.groupMappings.find((mapping: any) => {
             return mapping.simradGroup === group
           })
-          if ( mapping ) {
+          if (mapping) {
             setRaymarineDisplayNightMode(mapping.raymarineGroup, value)
           }
           return {
@@ -515,7 +520,7 @@ export default function (app: any) {
               {
                 path,
                 value: 0
-              },
+              }
             ],
             meta: [
               {
@@ -538,19 +543,20 @@ export default function (app: any) {
     })
   }
 
-  function convert(pgn: PGN) {
-    return needsCamelMapping ? mapCamelCaseKeys(pgn) : pgn
-  }
-  
-  function setRaymarineDisplayBrightness(group:string, value:number) {
-    app.emit('nmea2000JsonOut',
-             convert(new PGN_126720_Seatalk1DisplayBrightness({
-               group: raymarineDisplayGroups[group],
-               unknown1: 1,
-               brightness: value * 100,
-               unknown2: 0,
-             })))
-    
+  function setRaymarineDisplayBrightness (group: string, value: number) {
+    app.emit(
+      'nmea2000JsonOut',
+      convertCamelCase(
+        app,
+        new PGN_126720_Seatalk1DisplayBrightness({
+          group: raymarineDisplayGroups[group],
+          unknown1: 1,
+          brightness: value * 100,
+          unknown2: 0
+        })
+      )
+    )
+
     app.handleMessage(plugin.id, {
       updates: [
         {
@@ -565,18 +571,20 @@ export default function (app: any) {
     })
   }
 
-  function setRaymarineDisplayColor(group:string, value:string)
-  {
-    let pgn =  convert(new PGN_126720_Seatalk1DisplayColor({
-      group: raymarineDisplayGroups[group],
-      unknown1: 1,
-      color:raymarineColorMap[value],
-      unknown2: 0,
-    }))
-    app.emit('nmea2000JsonOut',pgn)
+  function setRaymarineDisplayColor (group: string, value: string) {
+    let pgn = convertCamelCase(
+      app,
+      new PGN_126720_Seatalk1DisplayColor({
+        group: raymarineDisplayGroups[group],
+        unknown1: 1,
+        color: raymarineColorMap[value],
+        unknown2: 0
+      })
+    )
+    app.emit('nmea2000JsonOut', pgn)
   }
 
-  function setRaymarineDisplayNightMode(group:string, value:number) {
+  function setRaymarineDisplayNightMode (group: string, value: number) {
     const dayColor = props.raymarineDayColor || 'day1'
     const nightColor = props.raymarineNightColor || 'red/black'
     setRaymarineDisplayColor(group, value === 1 ? nightColor : dayColor)
@@ -593,18 +601,22 @@ export default function (app: any) {
       ]
     })
   }
-  
 
-  function setSimradDisplayBrightness(group:string, value:number)
-  {
-    app.emit('nmea2000JsonOut', convert(new PGN_130845_SimnetKeyValue({
-      displayGroup: simradDisplayGroups[group],
-      key: "Backlight level",
-      spare9: 0,
-      minlength:1,
-      value:value*100
-    })))
-    
+  function setSimradDisplayBrightness (group: string, value: number) {
+    app.emit(
+      'nmea2000JsonOut',
+      convertCamelCase(
+        app,
+        new PGN_130845_SimnetKeyValue({
+          displayGroup: simradDisplayGroups[group],
+          key: 'Backlight level',
+          spare9: 0,
+          minlength: 1,
+          value: value * 100
+        })
+      )
+    )
+
     app.handleMessage(plugin.id, {
       updates: [
         {
@@ -619,16 +631,21 @@ export default function (app: any) {
     })
   }
 
-  function setSimradDisplayNightMode(group:string, value:number)
-  {
-    app.emit('nmea2000JsonOut', convert(new PGN_130845_SimnetKeyValue({
-      displayGroup: simradDisplayGroups[group],
-      key: "Night mode",
-      spare9: 0,
-      minlength:1,
-      value:value == 1 ? 4 : 2
-    })))
-    
+  function setSimradDisplayNightMode (group: string, value: number) {
+    app.emit(
+      'nmea2000JsonOut',
+      convertCamelCase(
+        app,
+        new PGN_130845_SimnetKeyValue({
+          displayGroup: simradDisplayGroups[group],
+          key: 'Night mode',
+          spare9: 0,
+          minlength: 1,
+          value: value == 1 ? 4 : 2
+        })
+      )
+    )
+
     app.handleMessage(plugin.id, {
       updates: [
         {
@@ -643,20 +660,25 @@ export default function (app: any) {
     })
   }
 
-  function setSimradDisplayNightColor(group:string, value:string)
-  {
-    app.emit('nmea2000JsonOut', convert(new PGN_130845_SimnetKeyValue({
-      displayGroup: simradDisplayGroups[group],
-      key: "Night mode color",
-      spare9: 0,
-      minlength:1,
-      value: simradDisplayNightColors[value]
-    })))
+  function setSimradDisplayNightColor (group: string, value: string) {
+    app.emit(
+      'nmea2000JsonOut',
+      convertCamelCase(
+        app,
+        new PGN_130845_SimnetKeyValue({
+          displayGroup: simradDisplayGroups[group],
+          key: 'Night mode color',
+          spare9: 0,
+          minlength: 1,
+          value: simradDisplayNightColors[value]
+        })
+      )
+    )
   }
 
-  function subscribeToSimnet(properties:any) {
+  function subscribeToSimnet (properties: any) {
     let command = {
-      context: "vessels.self",
+      context: 'vessels.self',
       subscribe: [
         {
           path: `electrical.displays.navico.*`,
@@ -664,41 +686,54 @@ export default function (app: any) {
         }
       ]
     }
-    
+
     app.debug('subscribe %j', command)
-    
-    app.subscriptionmanager.subscribe(command, onStop, subscription_error, (delta:any) => {
-      delta.updates.forEach((update:any) => {
-        if ( update['$source'] !== plugin.id ) {
-          if ( update.values ) {
-            update.values.forEach((vp:any) => {
-              const path = vp.path
-              if ( !path ) {
-                return
-              }
-              const value = vp.value
-              const group = getDisplayGroupName(path)
-              const mapping = properties.groupMappings.find((mapping:any) => {
-                return mapping.simradGroup === group
-              })
-              if ( mapping ) {
-                const key = getKeyName(path)
-                const setter = raymarineSetter[key]
-                if ( setter ) {
-                  app.debug('Syncing simnet %s %s to raymarine %s == %j', group, key, mapping.raymarineGroup, value)
-                  setter(mapping.raymarineGroup, value)
+
+    app.subscriptionmanager.subscribe(
+      command,
+      onStop,
+      subscription_error,
+      (delta: any) => {
+        delta.updates.forEach((update: any) => {
+          if (update['$source'] !== plugin.id) {
+            if (update.values) {
+              update.values.forEach((vp: any) => {
+                const path = vp.path
+                if (!path) {
+                  return
                 }
-              }
-            })
+                const value = vp.value
+                const group = getDisplayGroupName(path)
+                const mapping = properties.groupMappings.find(
+                  (mapping: any) => {
+                    return mapping.simradGroup === group
+                  }
+                )
+                if (mapping) {
+                  const key = getKeyName(path)
+                  const setter = raymarineSetter[key]
+                  if (setter) {
+                    app.debug(
+                      'Syncing simnet %s %s to raymarine %s == %j',
+                      group,
+                      key,
+                      mapping.raymarineGroup,
+                      value
+                    )
+                    setter(mapping.raymarineGroup, value)
+                  }
+                }
+              })
+            }
           }
-        }
-      })
-    })
+        })
+      }
+    )
   }
 
-  function subscribeToRaymarine(properties:any) {
+  function subscribeToRaymarine (properties: any) {
     let command = {
-      context: "vessels.self",
+      context: 'vessels.self',
       subscribe: [
         {
           path: `electrical.displays.raymarine.*`,
@@ -706,112 +741,132 @@ export default function (app: any) {
         }
       ]
     }
-    
-    app.debug('subscribe raymarine %j', command)
-    
-    app.subscriptionmanager.subscribe(command, onStop, subscription_error, (delta:any) => {
-      delta.updates.forEach((update:any) => {
-        if ( update['$source'] !== plugin.id ) {
-          if ( update.values ) {
-            update.values.forEach((vp:any) => {
-              const path = vp.path
-              if ( !path ) {
-                return
-              }
-              const value = vp.value
-              const group = getDisplayGroupName(path)
-              const mapping = properties.groupMappings.find((mapping:any) => {
-                return mapping.raymarineGroup === group
-              })
-              const key = getKeyName(path)
-              if ( mapping ) {
-                const setter = simradSetter[key]
-                if ( setter ) {
-                  app.debug('Syncing raymarine %s %s to simnet %s == %j', group, key, mapping.raymarineGroup, value)
-                  setter(mapping.simradGroup, value)
-                }
-              }
-              if ( key === 'color' ) {
-                let isNightMode = properties.raymarineNightColor ? (value === properties.raymarineNightColor?1:0) : (value === 'red/black'?1:0)
-                app.handleMessage(plugin.id, {
-                  updates: [
-                    {
-                      values: [
-                        {
-                          path: `electrical.displays.raymarine.${group}.nightMode.state`,
-                          value: isNightMode
-                        }
-                      ]
-                    }
-                  ]
-                })
 
-                if ( mapping ) {
-                  setSimradDisplayNightMode(mapping.simradGroup, isNightMode)
+    app.debug('subscribe raymarine %j', command)
+
+    app.subscriptionmanager.subscribe(
+      command,
+      onStop,
+      subscription_error,
+      (delta: any) => {
+        delta.updates.forEach((update: any) => {
+          if (update['$source'] !== plugin.id) {
+            if (update.values) {
+              update.values.forEach((vp: any) => {
+                const path = vp.path
+                if (!path) {
+                  return
                 }
-              }
-            })
+                const value = vp.value
+                const group = getDisplayGroupName(path)
+                const mapping = properties.groupMappings.find(
+                  (mapping: any) => {
+                    return mapping.raymarineGroup === group
+                  }
+                )
+                const key = getKeyName(path)
+                if (mapping) {
+                  const setter = simradSetter[key]
+                  if (setter) {
+                    app.debug(
+                      'Syncing raymarine %s %s to simnet %s == %j',
+                      group,
+                      key,
+                      mapping.raymarineGroup,
+                      value
+                    )
+                    setter(mapping.simradGroup, value)
+                  }
+                }
+                if (key === 'color') {
+                  let isNightMode = properties.raymarineNightColor
+                    ? value === properties.raymarineNightColor
+                      ? 1
+                      : 0
+                    : value === 'red/black'
+                    ? 1
+                    : 0
+                  app.handleMessage(plugin.id, {
+                    updates: [
+                      {
+                        values: [
+                          {
+                            path: `electrical.displays.raymarine.${group}.nightMode.state`,
+                            value: isNightMode
+                          }
+                        ]
+                      }
+                    ]
+                  })
+
+                  if (mapping) {
+                    setSimradDisplayNightMode(mapping.simradGroup, isNightMode)
+                  }
+                }
+              })
+            }
           }
-        }
-      })
-    })
+        })
+      }
+    )
   }
 
   const raymarineSetter: any = {
     'nightMode.state': setRaymarineDisplayNightMode,
-    'brightness': setRaymarineDisplayBrightness
+    brightness: setRaymarineDisplayBrightness
   }
 
   const simradSetter: any = {
     'nightMode.state': setSimradDisplayNightMode,
-    'brightness': setSimradDisplayBrightness
+    brightness: setSimradDisplayBrightness
   }
 
-  function subscription_error(err:any)
-  {
+  function subscription_error (err: any) {
     app.setPluginError(err)
   }
-  
+
   return plugin
 }
 
-const raymarineDisplayGroups: {[key:string]: SeatalkNetworkGroup} = {
-  'none': SeatalkNetworkGroup.None,
-  'helm1': SeatalkNetworkGroup.Helm1,
-  'helm2': SeatalkNetworkGroup.Helm2,
-  'cockpit': SeatalkNetworkGroup.Cockpit,
-  'flybridge': SeatalkNetworkGroup.Flybridge,
-  'mast': SeatalkNetworkGroup.Mast,
-  'group1': SeatalkNetworkGroup.Group1,
-  'group2': SeatalkNetworkGroup.Group2,
-  'group3': SeatalkNetworkGroup.Group3,
-  'group4': SeatalkNetworkGroup.Group4,
-  'group5': SeatalkNetworkGroup.Group5
+const raymarineDisplayGroups: { [key: string]: SeatalkNetworkGroup } = {
+  none: SeatalkNetworkGroup.None,
+  helm1: SeatalkNetworkGroup.Helm1,
+  helm2: SeatalkNetworkGroup.Helm2,
+  cockpit: SeatalkNetworkGroup.Cockpit,
+  flybridge: SeatalkNetworkGroup.Flybridge,
+  mast: SeatalkNetworkGroup.Mast,
+  group1: SeatalkNetworkGroup.Group1,
+  group2: SeatalkNetworkGroup.Group2,
+  group3: SeatalkNetworkGroup.Group3,
+  group4: SeatalkNetworkGroup.Group4,
+  group5: SeatalkNetworkGroup.Group5
 }
 
-const raymarineColorMap: {[key:string]: SeatalkDisplayColor} = {
-  "day1": SeatalkDisplayColor.Day1,
-  "day2": SeatalkDisplayColor.Day2,
-  "red/black": SeatalkDisplayColor.Redblack,
-  "inverse": SeatalkDisplayColor.Inverse,
+const raymarineColorMap: { [key: string]: SeatalkDisplayColor } = {
+  day1: SeatalkDisplayColor.Day1,
+  day2: SeatalkDisplayColor.Day2,
+  'red/black': SeatalkDisplayColor.Redblack,
+  inverse: SeatalkDisplayColor.Inverse
 }
 
-const simradDisplayGroups: {[key: string]: SimnetDisplayGroup} = {
-  'default': SimnetDisplayGroup.Default,
-  'group1': SimnetDisplayGroup.Group1,
-  'group2': SimnetDisplayGroup.Group2,
-  'group3': SimnetDisplayGroup.Group3,
-  'group4': SimnetDisplayGroup.Group4,
-  'group5': SimnetDisplayGroup.Group5,
-  'group6': SimnetDisplayGroup.Group6,
+const simradDisplayGroups: { [key: string]: SimnetDisplayGroup } = {
+  default: SimnetDisplayGroup.Default,
+  group1: SimnetDisplayGroup.Group1,
+  group2: SimnetDisplayGroup.Group2,
+  group3: SimnetDisplayGroup.Group3,
+  group4: SimnetDisplayGroup.Group4,
+  group5: SimnetDisplayGroup.Group5,
+  group6: SimnetDisplayGroup.Group6
 }
 
-const simradDisplayNightColors: {[key: string]: SimnetNightModeColor|number} = {
-  'red': SimnetNightModeColor.Red,
-  'green': SimnetNightModeColor.Green,
-  'blue': SimnetNightModeColor.Blue,
-  'white': SimnetNightModeColor.White,
-  'magenta': 4
+const simradDisplayNightColors: {
+  [key: string]: SimnetNightModeColor | number
+} = {
+  red: SimnetNightModeColor.Red,
+  green: SimnetNightModeColor.Green,
+  blue: SimnetNightModeColor.Blue,
+  white: SimnetNightModeColor.White,
+  magenta: 4
 }
 
 interface Plugin {
@@ -822,4 +877,3 @@ interface Plugin {
   description: string
   schema: any
 }
-
