@@ -16,7 +16,7 @@
   "author": "scott@scottbender.net",
   "license": "Apache-2.0",
   "dependencies": {
-    "@canboat/ts-pgns": "^1.8.0",
+    "@canboat/ts-pgns": "^1.11.2",
     "camelcase": "^6.2.0",
     "semver": "^7.7.2"
   },
