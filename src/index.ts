@@ -18,6 +18,7 @@ import {
   PGN_126720_Seatalk1DisplayBrightness,
   PGN_126720_Seatalk1DisplayColor,
   PGN_130845_SimnetKeyValue,
+  SeatalkShared,
   SeatalkNetworkGroup,
   SeatalkDisplayColor,
   SimnetDisplayGroup,
@@ -550,7 +551,7 @@ export default function (app: any) {
         app,
         new PGN_126720_Seatalk1DisplayBrightness({
           group: raymarineDisplayGroups[group],
-          unknown1: 1,
+          shared: SeatalkShared.Shared,
           brightness: value * 100,
           unknown2: 0
         })
