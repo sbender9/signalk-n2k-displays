@@ -550,7 +550,7 @@ export default function (app: any) {
         app,
         new PGN_126720_Seatalk1DisplayBrightness({
           group: raymarineDisplayGroups[group],
-          unknown1: 1,
+          shared: 1,
           brightness: value * 100,
           unknown2: 0
         })
@@ -577,9 +577,10 @@ export default function (app: any) {
       new PGN_126720_Seatalk1DisplayColor({
         group: raymarineDisplayGroups[group],
         unknown1: 1,
+        shared: 1,
         color: raymarineColorMap[value],
         unknown2: 0
-      })
+      } as any)
     )
     app.emit('nmea2000JsonOut', pgn)
   }
