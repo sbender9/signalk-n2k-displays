@@ -196,19 +196,16 @@ export default function (app: any) {
               {
                 path,
                 value: {
-                  path,
-                  value: {
-                    displayName: `${raymarineDisplayGroups[group]} Color`,
-                    possibleValues: [
-                      ...Object.keys(raymarineColorMap).map((color: any) => {
-                        return {
-                          title: raymarineColorMap[color],
-                          value: color
-                        }
-                      })
-                    ],
-                    enum: [...Object.keys(raymarineColorMap)]
-                  }
+                  displayName: `${raymarineDisplayGroups[group]} Color`,
+                  possibleValues: [
+                    ...Object.keys(raymarineColorMap).map((color: any) => {
+                      return {
+                        title: raymarineColorMap[color],
+                        value: color
+                      }
+                    })
+                  ],
+                  enum: [...Object.keys(raymarineColorMap)]
                 }
               }
             ]
@@ -392,22 +389,18 @@ export default function (app: any) {
               {
                 path,
                 value: {
-                  path,
-                  value: {
-                    displayName: `${simradDisplayGroups[group]} Night Color`,
-                    possibleValues: [
-                      ...Object.keys(simradDisplayNightColors).map(
-                        (color: any) => {
-                          return {
-                            title:
-                              color.charAt(0).toUpperCase() + color.slice(1),
-                            value: color
-                          }
+                  displayName: `${simradDisplayGroups[group]} Night Color`,
+                  possibleValues: [
+                    ...Object.keys(simradDisplayNightColors).map(
+                      (color: any) => {
+                        return {
+                          title: color.charAt(0).toUpperCase() + color.slice(1),
+                          value: color
                         }
-                      )
-                    ],
-                    enum: [...Object.keys(simradDisplayNightColors)]
-                  }
+                      }
+                    )
+                  ],
+                  enum: [...Object.keys(simradDisplayNightColors)]
                 }
               }
             ]
