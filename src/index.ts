@@ -159,6 +159,14 @@ export default function (app: any) {
 
   function setupRaymarineColor () {
     Object.keys(raymarineDisplayGroups).forEach(group => {
+      if (
+        props.raymarineGroups !== undefined &&
+        props.raymarineGroups[group] !== undefined &&
+        props.raymarineGroups[group] === false
+      ) {
+        return
+      }
+      
       let path = `electrical.displays.raymarine.${group}.color`
       app.registerPutHandler(
         'vessels.self',
@@ -217,6 +225,14 @@ export default function (app: any) {
 
   function setupRaymarineBrightness () {
     Object.keys(raymarineDisplayGroups).forEach(group => {
+      if (
+        props.raymarineGroups !== undefined &&
+        props.raymarineGroups[group] !== undefined &&
+        props.raymarineGroups[group] === false
+      ) {
+        return
+      }
+
       let path = `electrical.displays.raymarine.${group}.brightness`
       app.registerPutHandler(
         'vessels.self',
@@ -412,6 +428,14 @@ export default function (app: any) {
 
   function setupSimradBrightness () {
     Object.keys(simradDisplayGroups).forEach(group => {
+      if (
+        props.navicoGroups !== undefined &&
+        props.navicoGroups[group] !== undefined &&
+        props.navicoGroups[group] === false
+      ) {
+        return
+      }
+
       let path = `electrical.displays.navico.${group}.brightness`
       app.registerPutHandler(
         'vessels.self',
