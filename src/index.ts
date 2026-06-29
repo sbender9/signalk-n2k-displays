@@ -22,6 +22,7 @@ import {
   SeatalkNetworkGroup,
   SeatalkDisplayColor,
   SimnetDisplayGroup,
+  SimnetKeyOperation,
   SimnetNightModeColor,
   convertCamelCase
 } from '@canboat/ts-pgns'
@@ -629,8 +630,7 @@ export default function (app: any) {
         new PGN_130845_SimnetKeyValue({
           displayGroup: simradDisplayGroups[group],
           key: 'Backlight level',
-          spare9: 0,
-          minlength: 1,
+          operation: SimnetKeyOperation.Set,
           value: value * 100
         })
       )
@@ -658,8 +658,7 @@ export default function (app: any) {
         new PGN_130845_SimnetKeyValue({
           displayGroup: simradDisplayGroups[group],
           key: 'Night mode',
-          spare9: 0,
-          minlength: 1,
+          operation: SimnetKeyOperation.Set,
           value: value == 1 ? 4 : 2
         })
       )
@@ -687,8 +686,7 @@ export default function (app: any) {
         new PGN_130845_SimnetKeyValue({
           displayGroup: simradDisplayGroups[group],
           key: 'Night mode color',
-          spare9: 0,
-          minlength: 1,
+          operation: SimnetKeyOperation.Set,
           value: simradDisplayNightColors[value]
         })
       )
