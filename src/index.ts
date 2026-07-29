@@ -197,7 +197,7 @@ export default function (app: any) {
             values: [
               {
                 path,
-                value: 'day1'
+                value: props.raymarineDayColor || 'day1'
               }
             ],
             meta: [
@@ -304,19 +304,7 @@ export default function (app: any) {
         'vessels.self',
         path,
         (context: string, path: string, value: any, cb: any) => {
-          setRaymarineDisplayColor(group, value === 1 ? 'red/black' : 'day1')
-          app.handleMessage(plugin.id, {
-            updates: [
-              {
-                values: [
-                  {
-                    path,
-                    value: value
-                  }
-                ]
-              }
-            ]
-          })
+          setRaymarineDisplayNightMode(group, Number(value))
           const mapping = props.groupMappings.find((mapping: any) => {
             return mapping.raymarineGroup === group
           })
@@ -604,22 +592,31 @@ export default function (app: any) {
   }
 
   function setRaymarineDisplayNightMode (group: string, value: number) {
-    const dayColor = props.raymarineDayColor || 'day1'
-    const nightColor = props.raymarineNightColor || 'red/black'
-    setRaymarineDisplayColor(group, value === 1 ? nightColor : dayColor)
-    app.handleMessage(plugin.id, {
-      updates: [
-        {
-          values: [
-            {
-              path: `electrical.displays.raymarine.${group}.nightMode.state`,
-              value: value
-            }
-          ]
-        }
-      ]
-    })
-  }
+  value = Number(value)
+
+  const dayColor = props.raymarineDayColor || 'day1'
+  const nightColor = props.raymarineNightColor || 'red/black'
+  const color = value === 1 ? nightColor : dayColor
+
+  setRaymarineDisplayColor(group, color)
+
+  app.handleMessage(plugin.id, {
+    updates: [
+      {
+        values: [
+          {
+            path: `electrical.displays.raymarine.${group}.nightMode.state`,
+            value: value
+          },
+          {
+            path: `electrical.displays.raymarine.${group}.color`,
+            value: color
+          }
+        ]
+      }
+    ]
+  })
+}
 
   function setSimradDisplayBrightness (group: string, value: number) {
     app.emit(
